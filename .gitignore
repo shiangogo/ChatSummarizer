@@ -1,0 +1,15 @@
+*.sqlite3
+venv/
+settings.py
+*/__pycache__/
+*/migrations/
+.pyc
+local_settings.py
+*.env
+.env
+media/
+static/
+logs/
+.log
+.vscode/
+.idea/
