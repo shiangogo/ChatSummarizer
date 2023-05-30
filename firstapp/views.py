@@ -33,11 +33,11 @@ def callback(request):
             return HttpResponseBadRequest()
 
         for event in events:
-            print(event)
-            if isinstance(event, MessageEvent):
-                is_in_group = event.source.type == "group"
-                message_dict = {}
-                
+            is_in_group = event.source.type == "group"
+            message_dict = {}
+            col_labels = table.row_values(1)
+
+            if event.type == "message" and event.message.type == "text":
                 if is_in_group:
                     message_dict["group_id"] = event.source.group_id
                     message_dict["group_name"] = line_bot_api.get_group_summary(event.source.group_id).group_name
@@ -47,14 +47,24 @@ def callback(request):
                     message_dict["group_name"] = ""
                     message_dict["user_name"] = line_bot_api.get_profile(event.source.user_id).display_name
 
+                message_dict["id"] = event.message.id
                 message_dict["user_id"] = event.source.user_id
                 message_dict["message"] = event.message.text
                 message_dict["sent_at"] = event.timestamp
+                message_dict["unsent_at"] = ""
 
-                table.append_row([message_dict.get(key) for key in ["group_id", "group_name", "user_id", "user_name", "message", "sent_at"]])
+
+                table.append_row([message_dict.get(key) for key in ["id", "group_id", "group_name", "user_id", "user_name", "message", "sent_at", "unsent_at"]])
 
                 # resp_message = "用戶名：" + message_dict["user_name"] + " 說：「" + message_dict["message"] + "」"
                 # line_bot_api.reply_message(event.reply_token,TextSendMessage(text=resp_message))
+            if event.type == "unsend":
+                try:
+                    unsent_at_index = col_labels.index("unsent_at") + 1
+                    cell = table.find(event.unsend.message_id)
+                    table.update_cell(cell.row, unsent_at_index, event.timestamp)
+                except:
+                    pass
                 
         return HttpResponse()
     else:
