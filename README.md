@@ -1,13 +1,3 @@
-<style>
-  h2 {
-    color: #aaffaa;
-  }
-
-  h3 {
-    color: #ffffaa;
-  }
-</style>
-
 # ChatSummarizer 話題總結者
 
 這是一個可以幫你整理 Line 群組聊天訊息的 Line Bot 機器人。
