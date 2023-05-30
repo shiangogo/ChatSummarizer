@@ -35,20 +35,26 @@ def callback(request):
         for event in events:
             print(event)
             if isinstance(event, MessageEvent):
+                is_in_group = event.source.type == "group"
                 message_dict = {}
-                message_dict["user_id"] = event.source.user_id[:8]
+                
+                if is_in_group:
+                    message_dict["group_id"] = event.source.group_id
+                    message_dict["group_name"] = line_bot_api.get_group_summary(event.source.group_id).group_name
+                    message_dict["user_name"] = line_bot_api.get_group_member_profile(message_dict["group_id"], event.source.user_id).display_name
+                else:
+                    message_dict["group_id"] = ""
+                    message_dict["group_name"] = ""
+                    message_dict["user_name"] = line_bot_api.get_profile(event.source.user_id).display_name
+
+                message_dict["user_id"] = event.source.user_id
                 message_dict["message"] = event.message.text
                 message_dict["sent_at"] = event.timestamp
-                try:
-                    message_dict["group_id"] = event.source.group_id
-                except AttributeError:
-                    message_dict["group_id"] = ""
-                    pass
 
-                resp_message = "用戶ID：" + message_dict["user_id"] + " 說：「" + message_dict["message"] + "」"
-                table.append_row([message_dict["group_id"], message_dict["user_id"], message_dict["message"], message_dict["sent_at"]])
+                table.append_row([message_dict.get(key) for key in ["group_id", "group_name", "user_id", "user_name", "message", "sent_at"]])
 
-                line_bot_api.reply_message(event.reply_token,TextSendMessage(text=resp_message))
+                # resp_message = "用戶名：" + message_dict["user_name"] + " 說：「" + message_dict["message"] + "」"
+                # line_bot_api.reply_message(event.reply_token,TextSendMessage(text=resp_message))
                 
         return HttpResponse()
     else:
