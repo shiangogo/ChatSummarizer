@@ -1,3 +1,4 @@
+import os
 from django.shortcuts import render
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
@@ -7,43 +8,42 @@ from linebot import LineBotApi, WebhookParser
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
 from linebot.models import MessageEvent, TextSendMessage
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
-import gspread
+from firstapp.models import Message
+
 
 line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
 parser = WebhookParser(settings.LINE_CHANNEL_SECRET)
 
-service_account = gspread.service_account(filename=settings.GDOCS_OAUTH_JSON)
-db = service_account.open(settings.GDOCS_SPREADSHEET_NAME)
-table = db.worksheet(settings.GDOCS_WORKSHEET_NAME)
-
-def message_handler(event, is_in_group):
-    message_dict = {}
+def message_event_to_object(event, is_in_group):
+    message_obj = Message()
     if is_in_group:
-        message_dict["group_id"] = event.source.group_id
-        message_dict["group_name"] = line_bot_api.get_group_summary(event.source.group_id).group_name
-        message_dict["user_name"] = line_bot_api.get_group_member_profile(message_dict["group_id"], event.source.user_id).display_name
+        message_obj.group_id = event.source.group_id
+        message_obj.group_name = line_bot_api.get_group_summary(event.source.group_id).group_name
+        message_obj.user_name = line_bot_api.get_group_member_profile(event.source.group_id, event.source.user_id).display_name
     else:
-        message_dict["group_id"] = ""
-        message_dict["group_name"] = ""
-        message_dict["user_name"] = line_bot_api.get_profile(event.source.user_id).display_name
+        message_obj.group_id = None
+        message_obj.group_name = None
+        message_obj.user_name = line_bot_api.get_profile(event.source.user_id).display_name
 
-    message_dict["id"] = event.message.id
-    message_dict["user_id"] = event.source.user_id
-    message_dict["sent_at"] = event.timestamp
-    message_dict["unsent_at"] = ""
+    message_obj.id = int(event.message.id)
+    message_obj.user_id = event.source.user_id
+    message_obj.sent_at = datetime.fromtimestamp(int(event.timestamp) / 1000.0) + timedelta(hours=8)
+    message_obj.unsent_at = None
 
     if event.message.type == "text":
-        message_dict["message"] = event.message.text
+        message_obj.message = event.message.text
     elif event.message.type == "sticker":
         sticker_keywords = ", ".join(event.message.keywords)
-        message_dict["message"] = f"（傳送了一個{sticker_keywords}的貼圖）"
+        message_obj.message = f"（傳送了一個{sticker_keywords}的貼圖）"
     elif event.message.type == "image":
-        message_dict["message"] = "（傳送了一張圖片）"
+        message_obj.message = "（傳送了一張圖片）"
     else:
-        message_dict["message"] = ""
-    return message_dict
+        message_obj.message = None
+
+    return message_obj
+
 
 def parse_prompt_into_list(text):
     split_text = text.split()
@@ -59,6 +59,11 @@ def parse_prompt_into_list(text):
         days = 1
         keywords = "、".join(split_text[1:])
     return {"days":days, "keywords":keywords}
+
+def fetch_data_from_message_table(group_id, days):
+    #TODO
+    return
+
 
 @csrf_exempt
 def callback(request):
@@ -76,7 +81,6 @@ def callback(request):
         for event in events:
             print(event)
             is_in_group = event.source.type == "group"
-            col_labels = table.row_values(1)
 
             if event.type == "message":
                 if event.message.type == "text" and event.message.text.startswith("總結"):
@@ -90,19 +94,19 @@ def callback(request):
                     line_bot_api.reply_message(event.reply_token,TextSendMessage(text=resp_message))
 
                 else:
-                    message_dict = message_handler(event, is_in_group)
-
-                    table.append_row([message_dict.get(key) for key in ["id", "group_id", "group_name", "user_id", "user_name", "message", "sent_at", "unsent_at"]])
-
-                    # resp_message = message_dict["message"]
+                    # 一般聊天訊息
+                    message_obj = message_event_to_object(event, is_in_group)
+                    
+                    message_obj.save()
                     # line_bot_api.reply_message(event.reply_token,TextSendMessage(text=resp_message))
+
             if event.type == "unsend":
-                try:
-                    unsent_at_index = col_labels.index("unsent_at") + 1
-                    cell = table.find(event.unsend.message_id)
-                    table.update_cell(cell.row, unsent_at_index, event.timestamp)
-                except:
-                    pass
+                # 在unsent_at欄位加上時間戳記
+                print(event)
+                message = Message.objects.get(id=int(event.unsend.message_id))
+                unsent_time = datetime.fromtimestamp(int(event.timestamp) / 1000.0) + timedelta(hours=8)
+                message.unsent_at = unsent_time
+                message.save()
                 
         return HttpResponse()
     else:
