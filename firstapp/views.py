@@ -89,7 +89,7 @@ def callback(request):
                     if prompts:
                         resp_message = f"找出{prompts['days']}天內有關{prompts['keywords']}的訊息"
                     else:
-                        resp_message = "命令格式有誤，請輸入「總結 (天數選填) (關鍵字)」，如：「總結 3 重要 嚴重」或「總結 重要 嚴重」請用半形空格隔開！"
+                        resp_message = "命令格式有誤，請輸入「總結 (天數選填) (關鍵字)」，如：「總結 3 重要 嚴重」或「總結 重要 嚴重」請用半形空格隔開喔！"
 
                     line_bot_api.reply_message(event.reply_token,TextSendMessage(text=resp_message))
 
@@ -98,7 +98,8 @@ def callback(request):
                     message_obj = message_event_to_object(event, is_in_group)
                     
                     message_obj.save()
-                    # line_bot_api.reply_message(event.reply_token,TextSendMessage(text=resp_message))
+                    resp_message = event.message.text
+                    line_bot_api.reply_message(event.reply_token,TextSendMessage(text=resp_message))
 
             if event.type == "unsend":
                 # 在unsent_at欄位加上時間戳記
