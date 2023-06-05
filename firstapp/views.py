@@ -45,7 +45,7 @@ def message_event_to_object(event, is_in_group):
     return message_obj
 
 
-def parse_prompt_into_list(text):
+def parse_prompt_into_dict(text):
     split_text = text.split()
     if split_text[0] != "總結":
         return False
@@ -60,9 +60,11 @@ def parse_prompt_into_list(text):
         keywords = "、".join(split_text[1:])
     return {"days":days, "keywords":keywords}
 
-def fetch_data_from_message_table(group_id, days):
-    #TODO
-    return
+def fetch_data_from_message_table(group_id, user_id, days):
+    start_date = datetime.now().date() - timedelta(days=days)
+    if group_id:
+        data = Message.objects.filter(group_id=group_id, sent_at__gte=start_date)
+        return data
 
 
 @csrf_exempt
@@ -83,11 +85,18 @@ def callback(request):
             is_in_group = event.source.type == "group"
 
             if event.type == "message":
-                if event.message.type == "text" and event.message.text.startswith("總結"):
-                    print("執行總結")
-                    prompts = parse_prompt_into_list(event.message.text)
+                if event.message.type == "text" and event.message.text.startswith("總結") and is_in_group:
+                    # print("執行總結")
+                    prompts = parse_prompt_into_dict(event.message.text)
                     if prompts:
                         resp_message = f"找出{prompts['days']}天內有關{prompts['keywords']}的訊息"
+                        group_id = event.source.group_id
+                        user_id = event.source.user_id
+
+                        data = fetch_data_from_message_table(group_id, user_id, prompts['days'])
+                        chat_history = '\n'.join([f"{message.user_name}：{message.message}" for message in data])
+                        print(chat_history)
+
                     else:
                         resp_message = "命令格式有誤，請輸入「總結 (天數選填) (關鍵字)」，如：「總結 3 重要 嚴重」或「總結 重要 嚴重」請用半形空格隔開喔！"
 
