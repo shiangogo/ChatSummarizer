@@ -29,7 +29,7 @@ def message_event_to_object(event, is_in_group):
 
     message_obj.id = int(event.message.id)
     message_obj.user_id = event.source.user_id
-    message_obj.sent_at = datetime.fromtimestamp(int(event.timestamp) / 1000.0) + timedelta(hours=8)
+    message_obj.sent_at = datetime.fromtimestamp(int(event.timestamp) / 1000.0)
     message_obj.unsent_at = None
 
     if event.message.type == "text":
@@ -105,7 +105,7 @@ def callback(request):
                 # 在unsent_at欄位加上時間戳記
                 print(event)
                 message = Message.objects.get(id=int(event.unsend.message_id))
-                unsent_time = datetime.fromtimestamp(int(event.timestamp) / 1000.0) + timedelta(hours=8)
+                unsent_time = datetime.fromtimestamp(int(event.timestamp) / 1000.0)
                 message.unsent_at = unsent_time
                 message.save()
                 
