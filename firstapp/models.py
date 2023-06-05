@@ -2,7 +2,7 @@ from django.db import models
 
 # Create your models here.
 class Message(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.BigIntegerField(primary_key=True)
     group_id = models.CharField(max_length=50, null=True)
     group_name = models.CharField(max_length=50, null=True)
     user_id = models.CharField(max_length=50)
