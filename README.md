@@ -19,15 +19,14 @@
 
 ## 啟動方式
 
-1. 在`settings.example.py`中設定環境變量，並將其重新命名為`settings.py`。
+1. 在 `settings.example.py` 中設定環境變量，並將其重新命名為 `settings.py` 。
 2. 開啟終端機，並 cd 至專案目錄。
 3. 確保本機安裝 Docker。
-4. 在終端機執行`docker build -t chat-summarizer .`創建鏡像。
-5. 在終端機執行`docker run -p 8000:8000 -v .:/app chat-summarizer`，執行容器。
-6. 使用 Ngrok 將本地伺服器暴露，在終端機執行`ngrok http 8000`。
-7. 到 Line Developers 的後台，將 Messaging API 中 Webhook settings 設定的 Webhook URL 設定為 Ngrok 提供的網址，後面要加上`/callback`，完整如。https://xxxx-xxx-xxx-xxx-xxx.ngrok-free.app/callback
-8. 請確認按下`Verify`按鈕後，彈窗顯示`Success`的訊息。
-9. 啟用 Webhook ，將 Use webhook 打開。
+4. 在終端機執行 `docker compose up --build` ，可建立容器並運行 PostgreSQL 和專案。下一次啟動可執行 `docker compose up`。
+5. 使用 Ngrok 將本地伺服器暴露，在終端機執行 `ngrok http 8000` 。
+6. 到 Line Developers 的後台，將 Messaging API 中 Webhook settings 設定的 Webhook URL 設定為 Ngrok 提供的網址，後面要加上 `/callback` ，完整如。https://xxxx-xxx-xxx-xxx-xxx.ngrok-free.app/callback
+7. 請確認按下 `Verify` 按鈕後，彈窗顯示 `Success` 的訊息。
+8. 啟用 Webhook ，將 Use webhook 打開。
 
 ---
 

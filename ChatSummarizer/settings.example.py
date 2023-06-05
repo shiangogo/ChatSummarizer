@@ -25,10 +25,6 @@ SECRET_KEY = 'YOUR SECRET KEY'
 LINE_CHANNEL_ACCESS_TOKEN = 'YOUR LINE CHANNEL ACCESS TOKEN'
 LINE_CHANNEL_SECRET = 'YOUR LINE CHANNEL SECRET'
 
-GDOCS_OAUTH_JSON = 'YOUR Credential.json'
-GDOCS_SPREADSHEET_NAME = 'YOUR GOOGLE SHEET NAME'
-GDOCS_WORKSHEET_NAME = 'YOUR WORK SHEET NAME'
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -83,8 +79,12 @@ WSGI_APPLICATION = 'ChatSummarizer.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mydb',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
 
