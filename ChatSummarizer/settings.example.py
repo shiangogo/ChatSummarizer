@@ -22,8 +22,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'YOUR SECRET KEY'
 
+# Your Line channel access token and secret
 LINE_CHANNEL_ACCESS_TOKEN = 'YOUR LINE CHANNEL ACCESS TOKEN'
 LINE_CHANNEL_SECRET = 'YOUR LINE CHANNEL SECRET'
+
+# Your OpenAI API key
+OPENAI_API_KEY = 'YOUR OPENAI API KEY'
+
+# AI Model is required!
+AI_MODEL = "gpt-3.5-turbo-0301"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
