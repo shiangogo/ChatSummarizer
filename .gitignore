@@ -2,7 +2,8 @@
 venv/
 settings.py
 */__pycache__/
-*/migrations/
+*/migrations/*
+!*/migrations/__init__.py
 .pyc
 local_settings.py
 *.env
