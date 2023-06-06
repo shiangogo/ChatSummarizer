@@ -19,7 +19,7 @@ parser = WebhookParser(settings.LINE_CHANNEL_SECRET)
 
 openai.api_key = settings.OPENAI_API_KEY
 
-def message_event_to_object(event, is_in_group):
+def message_event_to_object(event, is_in_group, summarize_request = False):
     message_obj = Message()
     if is_in_group:
         message_obj.group_id = event.source.group_id
@@ -35,8 +35,10 @@ def message_event_to_object(event, is_in_group):
     message_obj.sent_at = datetime.fromtimestamp(int(event.timestamp) / 1000.0)
     message_obj.unsent_at = None
 
-    if event.message.type == "text":
+    if event.message.type == "text" and not summarize_request:
         message_obj.message = event.message.text
+    elif event.message.type == "text":
+        message_obj.message = f"（{message_obj.user_name}向AI要求重點整理對話）"
     elif event.message.type == "sticker":
         sticker_keywords = ", ".join(event.message.keywords)
         message_obj.message = f"（傳送了一個{sticker_keywords}的貼圖）"
@@ -71,7 +73,7 @@ def fetch_data_from_message_table(group_id, user_id, days):
 
 def ask_ai_for_summarization(chat, keywords = None, model = settings.AI_MODEL):
     if keywords:
-        prompt = f"請重點整理以下有關{keywords}的對話，\n{chat}"
+        prompt = f"請重點整理以下有關{keywords}的對話，\n{chat}\n如果沒有{keywords}相關的對話，你就簡短地說沒有相關對話。"
     else:
         prompt = f"幫我重點整理以下對話，\n{chat}"
     return openai.ChatCompletion.create(
@@ -117,6 +119,8 @@ def callback(request):
                         resp = ask_ai_for_summarization(chat_history, prompts['keywords'])
                         print(resp)
                         resp_message = resp_message + resp
+                        message_obj = message_event_to_object(event, is_in_group, True)
+                        message_obj.save()
 
                     else:
                         resp_message = "命令格式有誤，請輸入「總結 (天數選填) (關鍵字)」，如：「總結 3 重要 嚴重」或「總結 重要 嚴重」請用半形空格隔開喔！"
