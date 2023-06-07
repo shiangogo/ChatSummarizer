@@ -57,12 +57,12 @@ def parse_prompt_into_dict(text):
     else:
         days = 1
         keywords = "、".join(split_text[1:])
-    return {"days":days, "keywords":keywords}
+    return {"days":days, "keywords":int(keywords)}
 
 def fetch_data_from_message_table(group_id, user_id, days):
     start_date = datetime.now().date() - timedelta(days=int(days))
     if group_id:
-        data = Message.objects.filter(group_id=group_id, sent_at__gte=start_date)
+        data = Message.objects.filter(group_id=group_id, sent_at__gte=start_date, unsent_at__isnull=True)
         return data
 
 def ask_ai_for_summarization(chat, keywords = None, model = settings.AI_MODEL):
@@ -74,6 +74,6 @@ def ask_ai_for_summarization(chat, keywords = None, model = settings.AI_MODEL):
         model = model,
         messages = [
             { "role": "system", "content": "Assistant helps users summarize their conversation and reply in traditional Chinese." },
-            { "role": "user", "content": f"幫我總結以下對話，重點整理就好，\n{prompt}" }
+            { "role": "user", "content": prompt }
         ]
     )["choices"][0]["message"]["content"]

@@ -40,23 +40,23 @@ def callback(request):
                 if event.message.type == "text" and event.message.text.startswith("總結") and is_in_group:
                     # print("執行總結")
                     prompts = parse_prompt_into_dict(event.message.text)
-                    if prompts:
+                    if prompts and prompts["days"] < 7:
                         resp_message = f"找出{prompts['days']}天內有關{prompts['keywords']}的訊息\n"
                         group_id = event.source.group_id
                         user_id = event.source.user_id
-
+                        
                         data = fetch_data_from_message_table(group_id, user_id, prompts['days'])
                         chat_history = '\n'.join([f"{message.user_name}：{message.message}" for message in data])
 
                         print(chat_history)
-                        resp = ask_ai_for_summarization(chat_history, prompts['keywords'])
-                        print(resp)
-                        resp_message = resp_message + resp
+                        ai_resp = ask_ai_for_summarization(chat_history, prompts['keywords'])
+                        print(ai_resp)
+                        resp_message = resp_message + ai_resp
                         message_obj = message_event_to_object(event, is_in_group, True)
                         message_obj.save()
 
                     else:
-                        resp_message = "命令格式有誤，請輸入「總結 (天數選填) (關鍵字)」，如：「總結 3 重要 嚴重」或「總結 重要 嚴重」請用半形空格隔開喔！"
+                        resp_message = "命令格式有誤，請輸入「總結 (天數選填) (關鍵字)」，如：「總結 3 重要 嚴重」或「總結 重要 嚴重」請用半形空格隔開。只能查詢7天以內的聊天訊息。"
 
                     line_bot_api.reply_message(event.reply_token,TextSendMessage(text=resp_message))
 
