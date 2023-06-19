@@ -57,7 +57,7 @@ def parse_prompt_into_dict(text):
     else:
         days = 1
         keywords = "、".join(split_text[1:])
-    return {"days":days, "keywords":int(keywords)}
+    return {"days":int(days), "keywords": keywords}
 
 def fetch_data_from_message_table(group_id, user_id, days):
     start_date = datetime.now().date() - timedelta(days=int(days))
