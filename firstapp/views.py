@@ -42,7 +42,7 @@ def callback(request):
                     prompts = parse_prompt_into_dict(event.message.text)
                     if prompts and prompts["days"] < 7:
                         if prompts["keywords"]:
-                            resp_message = f"找出{prompts['days']}天內有關{prompts['days']}的訊息\n"
+                            resp_message = f"找出{prompts['days']}天內有關{prompts['keywords']}的訊息\n"
                         else:
                             resp_message = f"找出{prompts['days']}天內的重要訊息\n"
                         group_id = event.source.group_id
